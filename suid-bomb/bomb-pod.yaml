@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+   name: suid-bomb
+spec:
+   containers:
+   - name: bomb
+     image: quay.io/ykashtan/suid-bomb:latest
+     command: ["/bin/bash"]
+     args: ["-c","cd /app; ./a.out"]
