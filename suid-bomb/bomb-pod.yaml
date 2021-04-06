@@ -7,4 +7,4 @@ spec:
    - name: bomb
      image: quay.io/ykashtan/suid-bomb:latest
      command: ["/bin/bash"]
-     args: ["-c","cd /app; ./a.out"]
+     args: ["-c","cd /app; ./suid-bomb"]
