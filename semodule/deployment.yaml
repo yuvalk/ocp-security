@@ -1,0 +1,136 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: selinux-policies
+data:
+  ping_rule.te: |
+    module ping_rule 1.0;
+
+    require {
+	type install_t;
+	type setfiles_mac_t;
+	class process2 { nnp_transition nosuid_transition };
+    } 
+
+    #============= install_t ==============A
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: semodule-loader
+  labels:
+    app: semodule-loader
+spec:
+  selector:
+    matchLabels:
+      app: semodule-loader
+  template:
+    metadata:
+      labels:
+        app: semodule-loader
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        ${RPMS_NODE_ROLE}: ""
+      containers:
+      - name: rpms-loader
+        image: quay.io/ykashtan/semodule-loader:latest
+        command: ['sh', '-c', '/scripts/chroot.sh /selinux-policies/$POLICY_NAME && echo "Installing selinux policies" && sleep infinity']
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        env:
+          - name: POLICY_NAME
+            value: ping_rule.te
+        volumeMounts:
+        - mountPath: /selinux-policies
+          name: selinux-policies
+        - mountPath: /host
+          name: host
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          name: selinux-policies
+        name: selinux-policies
+      - hostPath:
+          path: /
+          type: Directory
+        name: host
+
+
+
+
+          apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    debug.openshift.io/source-container: container-00
+    debug.openshift.io/source-resource: /v1, Resource=nodes/dhcp-55-228.lab.eng.tlv2.redhat.com
+    openshift.io/scc: node-exporter
+  name: dhcp-55-228labengtlv2redhatcom-debug
+  namespace: semodule-test
+spec:
+  containers:
+  - command:
+    - /bin/sh
+    image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:42c537601f68d6ed6e230fecc64a68cd8f9b5b11158e520157852c9b114a8890
+    name: container-00
+    securityContext:
+      privileged: true
+      runAsUser: 0
+    stdin: true
+    stdinOnce: true
+    tty: true
+    volumeMounts:
+    - mountPath: /host
+      name: host
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-fsshk
+      readOnly: true
+  hostNetwork: true
+  hostPID: true
+  imagePullSecrets:
+  - name: default-dockercfg-td7kt
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Never
+  serviceAccountName: default
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - hostPath:
+      path: /
+      type: Directory
+    name: host
+  - name: kube-api-access-fsshk
+    projected:
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              fieldPath: metadata.namespace
+            path: namespace
+      - configMap:
+          items:
+          - key: service-ca.crt
+            path: service-ca.crt
+          name: openshift-service-ca.crt
+
