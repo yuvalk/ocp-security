@@ -1,0 +1,3 @@
+FROM registry.access.redhat.com/ubi8/ubi:8.5
+COPY chroot.sh /scripts/
+COPY semodule-load.sh /scripts/
