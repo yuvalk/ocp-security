@@ -1,0 +1,11 @@
+
+module ping_rule 1.0;
+
+require {
+        type container_t;
+        type node_t;
+        type spc_t;
+        class icmp_socket node_bind;
+}
+
+allow container_t node_t:icmp_socket node_bind;

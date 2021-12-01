@@ -4,17 +4,18 @@ metadata:
   name: selinux-policies
 data:
   ping_rule.te: |
+
+
     module ping_rule 1.0;
 
     require {
-      type install_t;
-      type setfiles_mac_t;
-      class process2 { nnp_transition nosuid_transition };
-    } 
+      type container_t;
+      type node_t;
+      type spc_t;
+      class icmp_socket node_bind;
+    }
 
-    #============= install_t ==============
-    allow install_t setfiles_mac_t:process2 { nnp_transition nosuid_transition };
-
+    allow container_t node_t:icmp_socket node_bind;
 ---
 apiVersion: apps/v1
 kind: DaemonSet
