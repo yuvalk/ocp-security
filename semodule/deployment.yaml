@@ -16,6 +16,7 @@ data:
     }
 
     allow container_t node_t:icmp_socket node_bind;
+    allow spc_t node_t:icmp_socket node_bind;
 ---
 apiVersion: apps/v1
 kind: DaemonSet
