@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+   name: argsparse-nothing
+spec:
+   containers:
+   - name: argsparse
+     image: quay.io/ykashtan/argsprinter:nothing
+     args: 
+     - A
+     - B
+     - C

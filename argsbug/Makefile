@@ -34,3 +34,12 @@ push-images: build-images
 	podman push $(registry)/$(project):cmd
 	podman push $(registry)/$(project):entrypoint
 	podman push $(registry)/$(project):cmdentrypoint
+
+.PHONY: oc-apply-pods
+oc-apply-pods:
+	@echo "applying all pods"
+	oc apply -f pod.cmd.yaml
+	oc apply -f pod.nothing.yaml
+	oc apply -f pod.entrypoint.yaml
+	oc apply -f pod.cmdentrypoint.yaml
+
