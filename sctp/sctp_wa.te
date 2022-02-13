@@ -1,0 +1,16 @@
+module sctp_wa 1.0;
+
+require {
+	type kernel_t;
+	type unlabeled_t;
+	type container_t;
+	class system module_request;
+	class sctp_socket { association read };
+}
+
+#============= container_t ==============
+
+allow container_t kernel_t:system module_request;
+allow container_t unlabeled_t:sctp_socket read;
+allow unlabeled_t self:sctp_socket association;
+
