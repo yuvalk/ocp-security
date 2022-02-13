@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+   name: sctp-peeloff-reproducer
+spec:
+   containers:
+   - name: reproducer
+     image: quay.io/ykashtan/sctp:latest
+     command: 
+     - /bin/bash
+     - -c
+     - |
+       mkfifo flag
+       trap 'rm -f flag' EXIT
+       echo "Run server"
+       /app/src/sctp_bz2048251_server -f flag -4 9999 &
+       read <>flag
+       /app/src/sctp_bz2048251_client 127.0.0.1 9999
+       wait
+       echo "Reproducer completed - check for AVC denials (ausearch -i -m avc -ts recent)"
