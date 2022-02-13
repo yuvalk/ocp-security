@@ -1,0 +1,10 @@
+Reproducer for BZ#2048251
+
+Prerequisites:
+- make
+- gcc
+- lkstcp-tools-devel
+- kernel-modules (kernel-modules-extra on RHEL)
+
+How to run:
+Just run ./reproduce.sh
