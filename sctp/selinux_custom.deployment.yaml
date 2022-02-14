@@ -11,12 +11,12 @@ data:
     	type unlabeled_t;
     	type container_t;
     	class system module_request;
-    	class sctp_socket { association read };
+    	class sctp_socket { association read create ioctl getattr lock write setattr append bind connect getopt setopt shutdown n  ame_connect node_bind };
     }
 
     allow container_t kernel_t:system module_request;
-    allow container_t unlabeled_t:sctp_socket read;
-    allow unlabeled_t self:sctp_socket association;
+    allow container_t unlabeled_t:sctp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown association name_connect node_bind };
+    allow unlabeled_t self:sctp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown association name_connect node_bind };
 ---
 apiVersion: apps/v1
 kind: DaemonSet
