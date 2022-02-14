@@ -1,0 +1,66 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: selinux-policies
+data:
+  sctp_wa.te: |
+    module sctp_wa 1.0;
+
+    require {
+    	type kernel_t;
+    	type unlabeled_t;
+    	type container_t;
+    	class system module_request;
+    	class sctp_socket { association read };
+    }
+
+    allow container_t kernel_t:system module_request;
+    allow container_t unlabeled_t:sctp_socket read;
+    allow unlabeled_t self:sctp_socket association;
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: semodule-loader
+  labels:
+    app: semodule-loader
+spec:
+  selector:
+    matchLabels:
+      app: semodule-loader
+  template:
+    metadata:
+      labels:
+        app: semodule-loader
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/worker: ""
+      containers:
+      - name: semodule-loader
+        image: quay.io/ykashtan/semodule-loader:latest
+        command: ['sh', '-c', '/scripts/chroot.sh /scripts/semodule-load.sh && echo "Installing selinux policies" && sleep infinity']
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        env:
+          - name: POLICY_NAME
+            value: ping_rule.te
+        volumeMounts:
+        - mountPath: /selinux-policies
+          name: selinux-policies
+        - mountPath: /host
+          name: host
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          name: selinux-policies
+        name: selinux-policies
+      - hostPath:
+          path: /
+          type: Directory
+        name: host
+
