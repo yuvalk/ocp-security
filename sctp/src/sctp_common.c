@@ -243,12 +243,6 @@ int receive_assoc(int sock, struct sockaddr_storage *sin, socklen_t *sinlen,
 	sctp_assoc_t assoc_id = 0;
 	char *peerlabel, msglabel[256];
 
-	/* Get assoc_id for sctp_peeloff() */
-	result = set_subscr_events(sock, off, on, off, off);
-	if (result < 0) {
-		perror("Server setsockopt: SCTP_EVENTS");
-		return 1;
-	}
 	*sinlen = sizeof(*sin);
 	flags = 0;
 
@@ -264,52 +258,44 @@ int receive_assoc(int sock, struct sockaddr_storage *sin, socklen_t *sinlen,
 		print_addr_info((struct sockaddr *)sin,
 				"Server SEQPACKET recvmsg");
 
-	if (flags & MSG_NOTIFICATION && flags & MSG_EOR) {
-		handle_event(msglabel, NULL, &assoc_id,
-			     verbose, "Peeloff Server");
-		if (assoc_id <= 0) {
-			printf("Server Invalid association ID: %d\n",
-			       assoc_id);
-			return 1;
-		}
-		/* No more notifications */
-		result = set_subscr_events(sock, off, off, off, off);
-		if (result < 0) {
-			perror("Server setsockopt: SCTP_EVENTS");
-			return 1;
-		}
-
-		peeloff_sk = sctp_peeloff(sock, assoc_id);
-		if (peeloff_sk < 0) {
-			perror("Server sctp_peeloff");
-			return 1;
-		}
-		if (verbose) {
-			printf("Server sctp_peeloff(3) on sk: %d with association ID: %d\n",
-			       peeloff_sk, assoc_id);
-		}
-
-		/* Now get the client msg on peeloff socket */
-		result = sctp_recvmsg(peeloff_sk, msglabel, sizeof(msglabel),
-				      (struct sockaddr *)sin, sinlen,
-				      NULL, &flags);
-		if (result < 0) {
-			perror("Server sctp_recvmsg-2");
-			close(peeloff_sk);
-			return 1;
-		}
-
-		if (verbose) {
-			print_addr_info((struct sockaddr *)sin,
-					"Server SEQPACKET peeloff recvmsg");
-			printf("peeloff association ID: %d\n",
-			       assoc_id);
-		}
-	} else {
+	if (!(flags & MSG_NOTIFICATION) || !(flags & MSG_EOR)) {
 		printf("Invalid sctp_recvmsg response FLAGS: %x\n",
 		       flags);
+		return 1;
+	}
+
+	handle_event(msglabel, NULL, &assoc_id,
+		     verbose, "Peeloff Server");
+	if (assoc_id <= 0) {
+		printf("Server Invalid association ID: %d\n",
+		       assoc_id);
+		return 1;
+	}
+	peeloff_sk = sctp_peeloff(sock, assoc_id);
+	if (peeloff_sk < 0) {
+		perror("Server sctp_peeloff");
+		return 1;
+	}
+	if (verbose) {
+		printf("Server sctp_peeloff(3) on sk: %d with association ID: %d\n",
+		       peeloff_sk, assoc_id);
+	}
+
+	/* Now get the client msg on peeloff socket */
+	result = sctp_recvmsg(peeloff_sk, msglabel, sizeof(msglabel),
+			      (struct sockaddr *)sin, sinlen,
+			      NULL, &flags);
+	if (result < 0) {
+		perror("Server sctp_recvmsg-2");
 		close(peeloff_sk);
 		return 1;
+	}
+
+	if (verbose) {
+		print_addr_info((struct sockaddr *)sin,
+				"Server SEQPACKET peeloff recvmsg");
+		printf("peeloff association ID: %d\n",
+		       assoc_id);
 	}
 
 	peerlabel = strdup("nopeer");
@@ -318,8 +304,8 @@ int receive_assoc(int sock, struct sockaddr_storage *sin, socklen_t *sinlen,
 
 	result = sctp_sendmsg(peeloff_sk, peerlabel,
 			      strlen(peerlabel),
-			      (struct sockaddr *)sin,
-			      *sinlen, 0, 0, 0, 0, 0);
+			      NULL, 0,
+			      0, 0, 0, 0, 0);
 	if (result < 0) {
 		perror("Server sctp_sendmsg");
 		close(peeloff_sk);
@@ -343,18 +329,9 @@ int open_assoc(int sock, struct sockaddr *sin, socklen_t sinlen,
 	sctp_assoc_t assoc_id = 0;
 	char byte = 0x41, label[1024];
 
-	/* Subscribe to assoc_id events */
-	result = set_subscr_events(sock, off, on, off, off);
+	result = connect(sock, sin, sinlen);
 	if (result < 0) {
-		perror("Client setsockopt: SCTP_EVENTS");
-		return 1;
-	}
-
-	/* First send a message to get an association. */
-	result = sctp_sendmsg(sock, &byte, 1, sin, sinlen,
-			      0, 0, 0, 0, 0);
-	if (result < 0) {
-		perror("Client sctp_sendmsg");
+		perror("Client connect");
 		return 1;
 	}
 
@@ -376,16 +353,18 @@ int open_assoc(int sock, struct sockaddr *sin, socklen_t sinlen,
 		printf("Client Invalid association ID: %d\n", assoc_id);
 		return 1;
 	}
-	/* No more notifications */
-	result = set_subscr_events(sock, off, off, off, off);
-	if (result < 0) {
-		perror("Client setsockopt: SCTP_EVENTS");
-		return 1;
-	}
 
 	peeloff_sk = sctp_peeloff(sock, assoc_id);
 	if (peeloff_sk < 0) {
 		perror("Client sctp_peeloff");
+		return 1;
+	}
+
+	result = sctp_sendmsg(peeloff_sk, &byte, 1, NULL, 0,
+			      0, 0, 0, 0, 0);
+	if (result < 0) {
+		perror("Client sctp_sendmsg");
+		close(peeloff_sk);
 		return 1;
 	}
 

@@ -69,6 +69,13 @@ int main(int argc, char **argv)
 		exit(5);
 	}
 
+	/* Subscribe to assoc_id events */
+	result = set_subscr_events(sock, off, on, off, off);
+	if (result < 0) {
+		perror("Client setsockopt: SCTP_EVENTS");
+		return 1;
+	}
+
 	result = open_assoc(sock, serverinfo->ai_addr, serverinfo->ai_addrlen,
 			    verbose);
 	if (result) {
