@@ -14,9 +14,7 @@ spec:
        trap 'rm -f flag' EXIT
        echo "Run server"
        /app/src/sctp_bz2048251_server -f flag -4 9999 &
-       sleep 5
        read <>flag
-       sleep 5
        /app/src/sctp_bz2048251_client 127.0.0.1 9999
        wait
        echo "Reproducer completed - check for AVC denials (ausearch -i -m avc -ts recent)"

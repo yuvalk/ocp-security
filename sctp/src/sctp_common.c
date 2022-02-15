@@ -329,6 +329,9 @@ int open_assoc(int sock, struct sockaddr *sin, socklen_t sinlen,
 	sctp_assoc_t assoc_id = 0;
 	char byte = 0x41, label[1024];
 
+    /* otherwise we might connect too fast */
+    sleep(1);
+
 	result = connect(sock, sin, sinlen);
 	if (result < 0) {
 		perror("Client connect");
