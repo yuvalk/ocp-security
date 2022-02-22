@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+      {
+       "name": "dpdk-network-1",
+       "namespace": "sriov-demo"
+      },
+      {
+       "name": "dpdk-network-1",
+       "namespace": "sriov-demo"
+      },
+      {
+       "name": "sriov-network-1",
+       "namespace": "sriov-demo"
+      },
+      {
+       "name": "sriov-network-1",
+       "namespace": "sriov-demo"
+      }
+    ]'
+  labels:
+    app: kernel-client
+  name: client
+  namespace: sriov-demo
+spec:
+  containers:
+    - command:
+      - /bin/bash
+      - +x
+      - -c
+      - |
+        echo sriov-network-1=$PCIDEVICE_OPENSHIFT_IO_SRIOV_NIC_1
+        echo dpdk-network-1=$PCIDEVICE_OPENSHIFT_IO_DPDK_NIC_1
+        cat /etc/podnetinfo/annotations
+        sleep INF
+      image: quay.io/ykashtan/ubi8-tools:latest
+      imagePullPolicy: Always
+      name: demo
+  terminationGracePeriodSeconds: 5
+
