@@ -8,6 +8,7 @@ spec:
     - hugepagesz=2M
     - iommu=pt
     - intel_iommu=on
+    - rd.driver.blacklist=iavf
   cpu:
     isolated: 8-15
     reserved: 0-7
