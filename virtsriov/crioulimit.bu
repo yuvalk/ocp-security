@@ -1,0 +1,17 @@
+variant: openshift
+version: 4.8.0
+metadata:
+  name: 100-worker-crioulimit
+  labels:
+    machineconfiguration.openshift.io/role: worker
+storage:
+  files:
+  - path: /etc/crio/crio.conf.d/10-custom
+    mode: 420
+    overwrite: true
+    contents:
+      inline: |
+        [crio.runtime]
+        default_ulimits = [
+          "memlock=-1:-1"
+        ]

@@ -1,0 +1,23 @@
+cluster: vftest
+domain: yuvalk.com
+memory: 28672
+masters: 3
+workers: 2
+numcpus: 16
+worker_memory: 16384
+vfiodeviceid: 154c
+vmrules:
+- vftest-worker-0:
+    iommu: true
+    pcidevices:
+    - "98:01.0"
+    - "98:01.1"
+    - "98:01.2"
+    - "98:01.3"
+- vftest-worker-1:
+    iommu: true
+    pcidevices:
+    - "98:02.0"
+    - "98:02.1"
+    - "98:02.2"
+    - "98:02.3"

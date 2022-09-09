@@ -1,0 +1,21 @@
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: cnf-performanceprofile
+spec:
+  additionalKernelArgs:
+    - default_hugepagesz=2MB
+    - hugepagesz=2M
+    - iommu=pt
+    - intel_iommu=on
+  cpu:
+    isolated: 8-15
+    reserved: 0-7
+  hugepages:
+    defaultHugepagesSize: 2M
+    pages:
+      - count: 1024
+        node: 0
+        size: 2M
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
