@@ -1,5 +1,4 @@
-virtsriov
-==========
+# virtsriov
 virtsriov is an attempt to run dpdk applications on top of openshift running in virtual machines.
 
 This includes all the configurations needed to 
@@ -11,8 +10,7 @@ This includes all the configurations needed to
 
 currently support intel nics, with intel iommu only.
 
-SRIOV background
------------------
+## SRIOV background
 The thing that apparently confuses some of us is related to better understanding of how sriov NIC works.
 I dont want to go into too much details here, and there is plenty info around (will ad dlink later)
 the important detail to remember about sriov and vms
@@ -23,9 +21,8 @@ so, the only viable solution is to create VFs on the HV and then move them to VM
 
 this repo will try to suggest a way to do that properly with openshift.
 
-the gory details:
-------------------
-hv config:
+## the gory details:
+### hv config:
 1. create vfs
 2. create vms. and here's the tricky part, for the workers we need:
 a. use uefi capable firmware (pc-q35)
@@ -54,7 +51,7 @@ d. add a memtune with high hard_limit, for example:
 ```
 if not done, qemu will crash out of memory. this is because iommu allocate extra memory.
 
-vm node config:
+### vm node config:
 1. kernel args:
 a. set hugepages
 b. iommu
@@ -66,8 +63,7 @@ b. iommu
 7. from pod, can look at env variables (add which) to get the ids of the attached vfs pci ids
 
 
-Openshift implementation:
---------------------------
+## Openshift implementation:
 1. I'm using kcli to interact with libvirt and also to deploy openshift.
 1. performance profile is used to get hugepages, set intel iommu and disable iavf
 1. to allow unprivileged dpdk, we need to raise the limit on amount of locked memory. this is done by changing the crio runtime ulimit. https://access.redhat.com/solutions/6243491
